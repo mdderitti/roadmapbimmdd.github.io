@@ -56,7 +56,7 @@
     <main class="container mx-auto px-4 py-8 md:py-12">
         <header class="text-center mb-10 md:mb-16">
             <!-- LOGO DA INCORPORADORA/CONSTRUTORA: MDD CONSULTORIA -->
-            <img src="uploaded:Design sem nome.png-20dbec2d-e018-4901-b1b5-eb7c97015a2a" 
+            <img src="Design sem nome.png" 
                  alt="Logo da MDD Consultoria" 
                  class="mx-auto mb-6 h-12 md:h-16 w-auto" 
                  onerror="this.onerror=null;this.src='https://placehold.co/150x50/f59e0b/ffffff?text=MDD+CONSULTORIA'" />
@@ -276,137 +276,6 @@
             }
         ];
 
-        
-        const API_KEY = ""; 
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
-        const MAX_RETRIES = 5;
-
-        async function callGeminiAPI(systemPrompt, userQuery) {
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-            };
-
-            for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-                try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.status === 429 && attempt < MAX_RETRIES - 1) {
-                        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        continue; 
-                    }
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Erro ao gerar conteúdo. Resposta vazia da API.";
-                    return text;
-
-                } catch (error) {
-                    if (attempt === MAX_RETRIES - 1) {
-                        console.error("Erro final na chamada da API Gemini:", error);
-                        return "Erro de rede ou falha na API. Por favor, tente novamente.";
-                    }
-                }
-            }
-        }
-
-        function displayMessage(phaseId, message, isError = false) {
-            const outputDiv = document.getElementById(`output-${phaseId}`);
-            outputDiv.innerHTML = `<div class="p-4 rounded-lg text-sm ${isError ? 'bg-red-100 text-red-700' : 'bg-teal-50 text-teal-800'} whitespace-pre-wrap">${message}</div>`;
-        }
-
-        function displayLoading(phaseId, isLoading) {
-            const button = document.getElementById(`btn-generate-${phaseId}`);
-            
-            button.disabled = isLoading;
-            button.classList.toggle('opacity-50', isLoading);
-            
-            if (isLoading) {
-                button.innerHTML = `
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Gerando...
-                `;
-            } else {
-                button.innerHTML = `Gerar Draft de Alinhamento ✨`;
-            }
-        }
-
-
-        async function generateDocumentation(phaseId) {
-            const phase = phaseData.find(p => p.id === phaseId);
-            if (!phase) {
-                displayMessage(phaseId, "Erro: Fase não encontrada.", true);
-                return;
-            }
-
-            displayLoading(phaseId, true);
-            displayMessage(phaseId, "Aguarde, o Gemini está redigindo seu rascunho...", false);
-
-            const activitiesStr = phase.activities.map((a, i) => `${i + 1}. ${a}`).join('\n');
-            const deliverablesStr = phase.deliverables.map((d, i) => `${i + 1}. ${d}`).join('\n');
-
-            let systemPrompt = "";
-            let userQuery = "";
-            let buttonText = "Gerar Draft de Alinhamento ✨";
-
-            
-            if (phaseId === 1) {
-                systemPrompt = "Aja como um Consultor BIM sênior. Sua tarefa é criar um e-mail profissional e persuasivo, destinado à alta gestão (Diretoria), para formalizar a conclusão da Fase 1 e garantir o patrocínio para avançar. O tom deve ser formal, otimista e focado em valor de negócio (ROI, Estratégia, Próximos Passos).";
-                userQuery = `Crie um e-mail para a Diretoria, focado em patrocínio e valor de negócio, com base nestes dados:
-- Fase Concluída: ${phase.title}
-- Duração: ${phase.durationWeeks} semanas
-- Entregáveis Chave: ${deliverablesStr}
-Foque na validação estratégica e na preparação para a Fase 2 (Entrevistas e Entendimento).`;
-                buttonText = "Gerar E-mail para Diretoria ✨";
-
-            } else if (phaseId === 2) {
-                systemPrompt = "Aja como um Coordenador BIM. Crie um roteiro de 5 perguntas-chave para iniciar a entrevista com um orçamentista ou engenheiro de custos, focado em entender os gargalos de informação e as necessidades de quantitativos para o processo AS-IS. As perguntas devem ser concisas e focadas em dor/solução BIM.";
-                userQuery = `Gere 5 perguntas de entrevista para a fase: ${phase.title}. Foco em: ${activitiesStr}`;
-                buttonText = "Gerar Roteiro de Entrevista ✨";
-
-            } else if (phaseId === 4) {
-                systemPrompt = "Aja como um Arquiteto de Processos. Crie o texto principal para um slide de apresentação (máximo 150 palavras) que descreva o Fluxo de Trabalho TO-BE (futuro), enfatizando os benefícios da colaboração e da minimização de erros.";
-                userQuery = `Crie o texto do slide para a fase: ${phase.title}. Foco nos Entregáveis: ${deliverablesStr}`;
-                buttonText = "Gerar Texto para Slide TO-BE ✨";
-            } else if (phaseId === 7) {
-                 systemPrompt = "Aja como um instrutor. Crie três tópicos de pauta curtos e objetivos (com 1 frase cada) para a reunião de 'Lições Aprendidas' do Projeto Piloto, focando em melhoria contínua.";
-                userQuery = `Crie os tópicos de pauta da reunião com base no tema: ${phase.title}. Entregável: Documento de 'Lições Aprendidas'.`;
-                buttonText = "Gerar Tópicos de Lições Aprendidas ✨";
-            }
-             else {
-                
-                systemPrompt = "Aja como um Gerente de Projeto. Crie um breve parágrafo (máximo 100 palavras) resumindo a fase e o próximo passo crítico, com base nas atividades e entregáveis a seguir. O parágrafo deve ser útil para um relatório de status semanal.";
-                userQuery = `Crie o resumo para a fase: ${phase.title}. Atividades: ${activitiesStr}. Entregáveis: ${deliverablesStr}`;
-                buttonText = "Gerar Resumo para Status Report ✨";
-            }
-            
-            document.getElementById(`btn-generate-${phaseId}`).innerHTML = buttonText;
-
-
-            try {
-                const generatedText = await callGeminiAPI(systemPrompt, userQuery);
-                displayMessage(phaseId, generatedText);
-            } catch (error) {
-                displayMessage(phaseId, "Erro: Não foi possível conectar ao Gerador Gemini. Tente novamente mais tarde.", true);
-                console.error("Gemini API call failed:", error);
-            } finally {
-                displayLoading(phaseId, false);
-                document.getElementById(`btn-generate-${phaseId}`).innerHTML = buttonText; 
-            }
-        }
-
-
         document.addEventListener('DOMContentLoaded', () => {
             const navContainer = document.getElementById('roadmap-nav-container');
             const detailsContainer = document.getElementById('details-container');
@@ -442,13 +311,6 @@ Foque na validação estratégica e na preparação para a Fase 2 (Entrevistas e
                 let activitiesList = phase.activities.map(item => `<li class="flex items-start"><span class="text-teal-600 mr-2 mt-1">&#10003;</span><span>${item}</span></li>`).join(''); 
                 let deliverablesList = phase.deliverables.map(item => `<li class="flex items-start"><span class="text-teal-700 mr-2 mt-1">&#9733;</span><span>${item}</span></li>`).join(''); 
 
-                let initialButtonText = "Gerar Draft de Alinhamento ✨";
-                if (phase.id === 2) initialButtonText = "Gerar Roteiro de Entrevista ✨";
-                else if (phase.id === 4) initialButtonText = "Gerar Texto para Slide TO-BE ✨";
-                else if (phase.id === 7) initialButtonText = "Gerar Tópicos de Lições Aprendidas ✨";
-                else initialButtonText = "Gerar Resumo para Status Report ✨";
-
-
                 detailItem.innerHTML = `
                     <h3 class="text-xl md:text-2xl font-bold text-teal-700 mb-4">Etapa ${phase.id}: ${phase.title}</h3> 
                     <p class="mb-4 text-stone-600"><strong class="text-stone-800">Duração Estimada:</strong> ${phase.durationWeeks} semanas</p>
@@ -467,21 +329,6 @@ Foque na validação estratégica e na preparação para a Fase 2 (Entrevistas e
                             </ul>
                         </div>
                     </div>
-                    
-                    <!-- FEATURE GEMINI: Gerador de Documentação Rápida -->
-                    <div class="mt-8 pt-6 border-t border-stone-100">
-                        <h4 class="text-lg font-semibold text-stone-800 mb-3">Gerador Gemini AI (Draft Rápido)</h4>
-                        <p class="text-sm text-stone-600 mb-4">Use a IA para gerar instantaneamente um rascunho de documento interno crucial para esta fase.</p>
-                        <button id="btn-generate-${phase.id}" 
-                                onclick="generateDocumentation(${phase.id})" 
-                                class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md flex items-center justify-center disabled:opacity-50">
-                            ${initialButtonText}
-                        </button>
-                        <div id="output-${phase.id}" class="mt-4 min-h-[50px]">
-                            <!-- O conteúdo gerado aparecerá aqui -->
-                        </div>
-                    </div>
-
                 `;
                 detailsContainer.appendChild(detailItem);
             });
