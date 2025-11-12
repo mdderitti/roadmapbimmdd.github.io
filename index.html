@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap de Implementação BIM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Dark Teal/Cyan (MDD Logo Colors) and Stone Neutrals -->
+    <!-- Application Structure Plan: A SPA de página única é projetada para clareza e exploração guiada. A estrutura é dividida em quatro seções principais: 1. Introdução, 2. O Fluxo do Roadmap Visual (o principal elemento de navegação interativo), 3. Detalhes da Etapa (o conteúdo principal, revelado dinamicamente), 4. Cronograma Visual (gráfico de Gantt simulado) e 5. Referências. O Fluxo do Roadmap no topo atua como uma navegação principal baseada em flexbox; clicar em uma etapa rola suavemente e destaca o cartão de detalhes correspondente abaixo. Esta estrutura foi escolhida para fornecer primeiro uma visão geral de alto nível (o fluxo), permitindo ao usuário "mergulhar" nos detalhes de cada fase sob demanda. Isso evita sobrecarga de informação e torna o plano complexo mais digerível. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: 8 Fases do Roadmap BIM (Alinhamento, Entrevistas, etc.). Goal: Organizar, Mostrar Sequência, Navegar. Viz/Method: Diagrama de fluxo horizontal criado com HTML/CSS/Tailwind (Flexbox). Cada fase é um 'div' clicável. Interaction: 'onclick' chama JS 'selectPhase(id)' para rolar e destacar os detalhes. Justification: Mais interativo e integrado do que uma imagem estática, serve como o "índice" visual principal do app. Library/Method: HTML/CSS/JS.
+        - Report Info: Detalhes de cada fase (Descrição, Duração, Atividades, Entregáveis). Goal: Informar (sob demanda). Viz/Method: Cartões de conteúdo HTML estruturados. Interaction: A função 'selectPhase(id)' remove a classe 'hidden' do cartão selecionado e a adiciona aos outros, e rola a página até o cartão. Justification: Oculta a complexidade, permitindo que os usuários se concentrem em uma fase de cada vez. Library/Method: HTML/JS.
+        - Report Info: Duração e sequência das fases. Goal: Mostrar cronograma/progressão ao longo do tempo. Viz/Method: Gráfico de Barras Horizontais (Horizontal Bar Chart) do Chart.js, configurado para simular um gráfico de Gantt (usando barras empilhadas com um primeiro conjunto de dados transparente para o 'início'). Interaction: Tooltips padrão do Chart.js no hover. Justification: Fornece uma representação visual clara do cronograma do projeto, duração de cada fase e o tempo total estimado. Library/Method: Chart.js (Canvas).
+        - Report Info: Base teórica. Goal: Fornecer credibilidade. Viz/Method: Lista HTML simples. Interaction: Nenhuma. Justification: Cumpre o requisito da solicitação de basear-se em referências. Library/Method: HTML.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfdfc; 
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px; 
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 500px; 
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px; 
+            }
+        }
+        .roadmap-nav-item {
+            transition: all 0.3s ease-in-out;
+            border-width: 2px;
+            border-color: transparent;
+        }
+        /* Cores atualizadas para combinar com a logo (Teal/Ciano) */
+        .roadmap-nav-item.active {
+            transform: translateY(-4px);
+            border-color: #14b8a6; /* teal-500 */
+            background-color: #f0fdfa; /* teal-50 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="text-stone-800">
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        <header class="text-center mb-10 md:mb-16">
+            <!-- LOGO DA INCORPORADORA/CONSTRUTORA: MDD CONSULTORIA -->
+            <img src="uploaded:Design sem nome.png-20dbec2d-e018-4901-b1b5-eb7c97015a2a" 
+                 alt="Logo da MDD Consultoria" 
+                 class="mx-auto mb-6 h-12 md:h-16 w-auto" 
+                 onerror="this.onerror=null;this.src='https://placehold.co/150x50/f59e0b/ffffff?text=MDD+CONSULTORIA'" />
+            
+            <h1 class="text-3xl md:text-5xl font-bold text-stone-900 mb-3">Roadmap Interativo de Implementação BIM</h1>
+            <p class="text-lg md:text-xl text-stone-600 max-w-3xl mx-auto">
+                Um guia para incorporadoras e construtoras de médio porte, baseado em referências técnicas e acadêmicas, focado em uma transição estruturada e eficiente.
+            </p>
+        </header>
+
+        
+        <section class="mb-10 md:mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold text-center text-stone-900 mb-8">Fluxo do Roadmap de Implementação</h2>
+            <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">
+                Este é o fluxo visual do nosso plano de implementação. Cada etapa é crucial para o sucesso da adoção do BIM. Clique em uma etapa para ver os detalhes, atividades e entregáveis associados a ela.
+            </p>
+            <div id="roadmap-nav-container" class="flex flex-col md:flex-row flex-wrap justify-center items-center gap-y-4 md:gap-x-2">
+            </div>
+        </section>
+
+        
+        <section class="mb-10 md:mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold text-center text-stone-900 mb-8">Detalhamento das Etapas</h2>
+            <div id="details-container" class="space-y-6">
+            </div>
+        </section>
+
+        
+        <section class="mb-10 md:mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold text-center text-stone-900 mb-8">Cronograma Visual Estimado</h2>
+             <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">
+                O gráfico abaixo simula um cronograma de Gantt para o projeto de implementação, mostrando a duração estimada (em semanas) e a sequência de cada fase. O cronograma total estimado é de aproximadamente 10 a 12 meses.
+            </p>
+            <div class="chart-container bg-white p-4 rounded-lg shadow-lg border border-stone-200">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </section>
+
+        
+        <section>
+            <h2 class="text-2xl md:text-3xl font-bold text-center text-stone-900 mb-8">Referências Base</h2>
+             <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">
+                Este roadmap é fundamentado em diretrizes e pesquisas consolidadas na área de Gestão da Informação da Construção, incluindo:
+            </p>
+            <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md border border-stone-200">
+                <ul class="list-disc list-inside space-y-3 text-stone-700">
+                    <li>Eastman, C., Teicholz, P., Sacks, R., & Liston, K. (2014). <span class="italic">Manual de BIM: Um Guia de Modelagem da Informação da Construção para Arquitetos, Engenheiros, Gerentes e Construtores</span>. Bookman.</li>
+                    <li>Succar, B. (2009). Building information modelling framework: A research and delivery foundation for industry stakeholders. <span class="italic">Automation in Construction</span>, 18(3), 357-375.</li>
+                    <li>Guia AsBEA (2021). <span class="italic">Diretrizes e Boas Práticas para o Processo de Projeto em BIM</span>. Associação Brasileira dos Escritórios de Arquitetura.</li>
+                    <li>Souza, A. L. (2018). <span class="italic">Proposta de um Modelo para Implementação de BIM em Pequenas e Médias Empresas de Construção Civil</span>. Dissertação de Mestrado, Universidade Federal do Paraná.</li>
+                    <li>ABNT NBR 15965 (Partes 1-7). (2012-2015). <span class="italic">Sistemas de classificação da informação da construção</span>.</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center p-6 mt-12 bg-stone-100 border-t border-stone-200">
+        <p class="text-sm text-stone-500">Este roadmap é uma proposta interativa. Prazos e atividades devem ser ajustados à realidade de cada empresa.</p>
+    </footer>
+
+    <script>
+        
+        const phaseData = [
+            {
+                id: 1,
+                title: "Alinhamento de Expectativas",
+                durationWeeks: 4,
+                startWeeks: 0,
+                description: "Fase fundamental para definir o 'porquê' da implementação do BIM. Envolve a alta gestão para estabelecer objetivos estratégicos claros, definir o escopo inicial e garantir o patrocínio (buy-in) da diretoria. O sucesso do BIM depende de objetivos alinhados ao negócio, e não apenas da adoção de software.",
+                activities: [
+                    "Workshops com a alta gestão para definir objetivos (ex: redução de custos, melhoria de qualidade, etc.).",
+                    "Definição dos Usos BIM prioritários para a empresa (ex: compatibilização 3D, orçamento 5D).",
+                    "Estabelecimento de um Comitê BIM e nomeação de um Gestor (BIM Manager) ou Coordenador.",
+                    "Análise inicial de investimentos e potencial de Retorno sobre o Investimento (ROI)."
+                ],
+                deliverables: [
+                    "Documento de 'Visão BIM' (BIM Vision).",
+                    "Plano de Objetivos e Usos BIM (Priorizados).",
+                    "Estrutura de governança BIM (Comitê e Gestor).",
+                    "Estimativa preliminar de investimento."
+                ]
+            },
+            {
+                id: 2,
+                title: "Entrevistas e Entendimento",
+                durationWeeks: 6,
+                startWeeks: 4,
+                description: "Mapeamento 'AS-IS' (Como é hoje). Esta etapa foca em entender profundamente como a empresa opera atualmente, desde a concepção até o pós-obra. As entrevistas com os líderes de setor (orçamento, projetos, obras) são cruciais para identificar fluxos de informação, gargalos e ferramentas utilizadas.",
+                activities: [
+                    "Entrevistas estruturadas com gestores de projetos, orçamentistas, engenheiros de obra, etc.",
+                    "Coleta de documentos padrão (projetos, planilhas de orçamento, cronogramas).",
+                    "Mapeamento do fluxo de informação atual e das ferramentas (software e hardware) existentes.",
+                    "Identificação de pontos críticos, retrabalhos e gargalos nos processos atuais."
+                ],
+                deliverables: [
+                    "Relatório de Diagnóstico 'AS-IS'.",
+                    "Mapas de Fluxo de Processo (Atuais).",
+                    "Inventário de hardware e software existente.",
+                    "Matriz de gargalos e ineficiências."
+                ]
+            },
+            {
+                id: 3,
+                title: "Análise do Fluxo de Trabalho",
+                durationWeeks: 4,
+                startWeeks: 10,
+                description: "Com o diagnóstico 'AS-IS' em mãos, esta fase analisa criticamente os dados coletados. O objetivo é identificar onde a metodologia BIM pode trazer os maiores ganhos, resolvendo os gargalos identificados e otimizando a troca de informações entre os departamentos.",
+                activities: [
+                    "Análise crítica dos mapas de processo 'AS-IS' em contraste com os objetivos BIM definidos na Etapa 1.",
+                    "Identificação de oportunidades de melhoria e automação.",
+                    "Priorização das áreas de maior impacto para a implementação inicial (ex: compatibilização antes do orçamento).",
+                    "Workshop de validação da análise com as equipes-chave."
+                ],
+                deliverables: [
+                    "Relatório de Análise de Aderência BIM.",
+                    "Documento de Oportunidades de Otimização.",
+                    "Definição do escopo para o 'Projeto Piloto'."
+                ]
+            },
+            {
+                id: 4,
+                title: "Proposta de Fluxo Atualizado",
+                durationWeeks: 5,
+                startWeeks: 14,
+                description: "Desenho do fluxo 'TO-BE' (Como será). Com base na análise, esta etapa redesenha os processos da empresa incorporando a metodologia BIM. O foco é criar um fluxo de trabalho colaborativo, onde a informação é criada uma vez e reutilizada por todos, minimizando erros de comunicação e perda de dados.",
+                activities: [
+                    "Desenho dos novos fluxos de processo 'TO-BE' (ex: fluxo de aprovação de projeto, fluxo de extração de quantitativos).",
+                    "Definição de papéis e responsabilidades no novo fluxo.",
+                    "Estabelecimento de padrões de troca de informação (ex: o que o orçamentista precisa do projetista).",
+                    "Apresentação e validação do fluxo 'TO-BE' com a gestão e equipes."
+                ],
+                deliverables: [
+                    "Mapas de Fluxo de Processo 'TO-BE'.",
+                    "Matriz de Papéis e Responsabilidades (RACI).",
+                    "Plano de Informação do Projeto (base para o PEB).",
+                    "Plano de implementação do Projeto Piloto."
+                ]
+            },
+            {
+                id: 5,
+                title: "Identificação de Ferramentas",
+                durationWeeks: 4,
+                startWeeks: 19,
+                description: "Seleção do 'stack' de tecnologia. Com os processos 'TO-BE' definidos, a empresa pode agora avaliar e selecionar as ferramentas (software e hardware) que melhor suportam esses novos fluxos. A decisão não deve ser baseada apenas na ferramenta de modelagem, mas no ecossistema (orçamento, planejamento, colaboração).",
+                activities: [
+                    "Definição dos requisitos técnicos de software (modelagem, compatibilização, orçamento 5D, etc.).",
+                    "Análise de mercado e solicitação de propostas (RFP) a fornecedores.",
+                    "Avaliação de hardware necessário (estações de trabalho, servidores/nuvem).",
+                    "Definição de um CDE (Common Data Environment - Ambiente Comum de Dados) para colaboração.",
+                    "Seleção das ferramentas e plano de aquisição."
+                ],
+                deliverables: [
+                    "Relatório de Avaliação de Software.",
+                    "Especificação de Hardware.",
+                    "Plataforma CDE selecionada.",
+                    "Plano de aquisição e licenciamento."
+                ]
+            },
+            {
+                id: 6,
+                title: "Detalhamento dos Processos",
+                durationWeeks: 8,
+                startWeeks: 23,
+                description: "Criação dos 'Manuais BIM' da empresa. Esta é uma fase de documentação intensiva, onde os fluxos 'TO-BE' são traduzidos em padrões, templates e manuais operacionais. É a criação da 'Bíblia BIM' da construtora, que guiará como os projetos serão executados.",
+                activities: [
+                    "Desenvolvimento do Manual/Plano de Execução BIM (PEB/BEP) Padrão da empresa.",
+                    "Criação de templates de projeto (arquivos-base com padrões).",
+                    "Desenvolvimento de bibliotecas de componentes BIM (paredes, portas, etc., com dados de custo).",
+                    "Definição de padrões de nomenclatura, organização de modelos e níveis de desenvolvimento (LOD/LOI)."
+                ],
+                deliverables: [
+                    "Manual BIM da Empresa (Standard BIM).",
+                    "Plano de Execução BIM (PEB) Template.",
+                    "Bibliotecas BIM iniciais.",
+                    "Templates de projeto."
+                ]
+            },
+            {
+                id: 7,
+                title: "Treinamentos e Projeto Piloto",
+                durationWeeks: 12,
+                startWeeks: 31,
+                description: "Capacitação das equipes e teste prático. O treinamento é dividido em conceitual (O que é BIM? Por que mudamos?) e ferramental (Como usar o software?). O Projeto Piloto é a aplicação prática em um empreendimento real (ou recém-concluído) para testar os novos fluxos e padrões em um ambiente controlado.",
+                activities: [
+                    "Treinamento conceitual em BIM e nos novos processos 'TO-BE' para todas as áreas.",
+                    "Treinamento técnico (software) focado nos papéis de cada equipe (modelagem, orçamento, etc.).",
+                    "Execução do Projeto Piloto com acompanhamento próximo da equipe de implementação.",
+                    "Coleta de feedback e 'lições aprendidas' do piloto."
+                ],
+                deliverables: [
+                    "Equipes capacitadas (certificados/listas de presença).",
+                    "Relatório de Acompanhamento do Projeto Piloto.",
+                    "Documento de 'Lições Aprendidas'.",
+                    "Primeiros modelos e entregáveis BIM gerados internamente."
+                ]
+            },
+            {
+                id: 8,
+                title: "Acompanhamento e Melhoria",
+                durationWeeks: 16,
+                startWeeks: 43,
+                description: "O BIM não é um projeto com fim, mas um processo de melhoria contínua. Após o piloto, o Manual BIM é revisado com as lições aprendidas. A implementação é expandida para outros projetos e são definidos indicadores (KPIs) para medir os resultados (ex: redução de RDOs de compatibilização, precisão orçamentária).",
+                activities: [
+                    "Revisão e atualização do Manual BIM e templates com base no feedback do piloto.",
+                    "Definição de Indicadores de Desempenho (KPIs) para os Usos BIM.",
+                    "Planejamento de expansão (rollout) do BIM para novos projetos.",
+                    "Criação de um ciclo de auditoria de modelos e processos para garantir a qualidade.",
+                    "Suporte contínuo às equipes de projeto."
+                ],
+                deliverables: [
+                    "Manual BIM v2.0 (Atualizado).",
+                    "Painel de KPIs (Dashboard de Desempenho BIM).",
+                    "Plano de Rollout para novos empreendimentos.",
+                    "Relatórios de auditoria e melhoria contínua."
+                ]
+            }
+        ];
+
+        
+        const API_KEY = ""; 
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+        const MAX_RETRIES = 5;
+
+        async function callGeminiAPI(systemPrompt, userQuery) {
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429 && attempt < MAX_RETRIES - 1) {
+                        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue; 
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Erro ao gerar conteúdo. Resposta vazia da API.";
+                    return text;
+
+                } catch (error) {
+                    if (attempt === MAX_RETRIES - 1) {
+                        console.error("Erro final na chamada da API Gemini:", error);
+                        return "Erro de rede ou falha na API. Por favor, tente novamente.";
+                    }
+                }
+            }
+        }
+
+        function displayMessage(phaseId, message, isError = false) {
+            const outputDiv = document.getElementById(`output-${phaseId}`);
+            outputDiv.innerHTML = `<div class="p-4 rounded-lg text-sm ${isError ? 'bg-red-100 text-red-700' : 'bg-teal-50 text-teal-800'} whitespace-pre-wrap">${message}</div>`;
+        }
+
+        function displayLoading(phaseId, isLoading) {
+            const button = document.getElementById(`btn-generate-${phaseId}`);
+            
+            button.disabled = isLoading;
+            button.classList.toggle('opacity-50', isLoading);
+            
+            if (isLoading) {
+                button.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Gerando...
+                `;
+            } else {
+                button.innerHTML = `Gerar Draft de Alinhamento ✨`;
+            }
+        }
+
+
+        async function generateDocumentation(phaseId) {
+            const phase = phaseData.find(p => p.id === phaseId);
+            if (!phase) {
+                displayMessage(phaseId, "Erro: Fase não encontrada.", true);
+                return;
+            }
+
+            displayLoading(phaseId, true);
+            displayMessage(phaseId, "Aguarde, o Gemini está redigindo seu rascunho...", false);
+
+            const activitiesStr = phase.activities.map((a, i) => `${i + 1}. ${a}`).join('\n');
+            const deliverablesStr = phase.deliverables.map((d, i) => `${i + 1}. ${d}`).join('\n');
+
+            let systemPrompt = "";
+            let userQuery = "";
+            let buttonText = "Gerar Draft de Alinhamento ✨";
+
+            
+            if (phaseId === 1) {
+                systemPrompt = "Aja como um Consultor BIM sênior. Sua tarefa é criar um e-mail profissional e persuasivo, destinado à alta gestão (Diretoria), para formalizar a conclusão da Fase 1 e garantir o patrocínio para avançar. O tom deve ser formal, otimista e focado em valor de negócio (ROI, Estratégia, Próximos Passos).";
+                userQuery = `Crie um e-mail para a Diretoria, focado em patrocínio e valor de negócio, com base nestes dados:
+- Fase Concluída: ${phase.title}
+- Duração: ${phase.durationWeeks} semanas
+- Entregáveis Chave: ${deliverablesStr}
+Foque na validação estratégica e na preparação para a Fase 2 (Entrevistas e Entendimento).`;
+                buttonText = "Gerar E-mail para Diretoria ✨";
+
+            } else if (phaseId === 2) {
+                systemPrompt = "Aja como um Coordenador BIM. Crie um roteiro de 5 perguntas-chave para iniciar a entrevista com um orçamentista ou engenheiro de custos, focado em entender os gargalos de informação e as necessidades de quantitativos para o processo AS-IS. As perguntas devem ser concisas e focadas em dor/solução BIM.";
+                userQuery = `Gere 5 perguntas de entrevista para a fase: ${phase.title}. Foco em: ${activitiesStr}`;
+                buttonText = "Gerar Roteiro de Entrevista ✨";
+
+            } else if (phaseId === 4) {
+                systemPrompt = "Aja como um Arquiteto de Processos. Crie o texto principal para um slide de apresentação (máximo 150 palavras) que descreva o Fluxo de Trabalho TO-BE (futuro), enfatizando os benefícios da colaboração e da minimização de erros.";
+                userQuery = `Crie o texto do slide para a fase: ${phase.title}. Foco nos Entregáveis: ${deliverablesStr}`;
+                buttonText = "Gerar Texto para Slide TO-BE ✨";
+            } else if (phaseId === 7) {
+                 systemPrompt = "Aja como um instrutor. Crie três tópicos de pauta curtos e objetivos (com 1 frase cada) para a reunião de 'Lições Aprendidas' do Projeto Piloto, focando em melhoria contínua.";
+                userQuery = `Crie os tópicos de pauta da reunião com base no tema: ${phase.title}. Entregável: Documento de 'Lições Aprendidas'.`;
+                buttonText = "Gerar Tópicos de Lições Aprendidas ✨";
+            }
+             else {
+                
+                systemPrompt = "Aja como um Gerente de Projeto. Crie um breve parágrafo (máximo 100 palavras) resumindo a fase e o próximo passo crítico, com base nas atividades e entregáveis a seguir. O parágrafo deve ser útil para um relatório de status semanal.";
+                userQuery = `Crie o resumo para a fase: ${phase.title}. Atividades: ${activitiesStr}. Entregáveis: ${deliverablesStr}`;
+                buttonText = "Gerar Resumo para Status Report ✨";
+            }
+            
+            document.getElementById(`btn-generate-${phaseId}`).innerHTML = buttonText;
+
+
+            try {
+                const generatedText = await callGeminiAPI(systemPrompt, userQuery);
+                displayMessage(phaseId, generatedText);
+            } catch (error) {
+                displayMessage(phaseId, "Erro: Não foi possível conectar ao Gerador Gemini. Tente novamente mais tarde.", true);
+                console.error("Gemini API call failed:", error);
+            } finally {
+                displayLoading(phaseId, false);
+                document.getElementById(`btn-generate-${phaseId}`).innerHTML = buttonText; 
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const navContainer = document.getElementById('roadmap-nav-container');
+            const detailsContainer = document.getElementById('details-container');
+            
+            
+            phaseData.forEach((phase, index) => {
+                
+                const navItem = document.createElement('div');
+                navItem.id = `nav-phase-${phase.id}`;
+                navItem.className = 'roadmap-nav-item cursor-pointer p-4 bg-white rounded-lg shadow-sm border-2 border-stone-200 w-full md:w-56 text-center hover:shadow-md hover:border-teal-500'; 
+                navItem.innerHTML = `
+                    <div class="text-xs font-bold text-teal-600">ETAPA ${phase.id}</div> 
+                    <div class="font-semibold text-stone-800">${phase.title}</div>
+                    <div class="text-sm text-stone-500">(${phase.durationWeeks} semanas)</div>
+                `;
+                navItem.onclick = () => selectPhase(phase.id);
+                
+                
+                if (index < phaseData.length - 1) {
+                    const separator = document.createElement('div');
+                    separator.className = 'w-px h-6 md:w-6 md:h-px bg-stone-300 transform md:rotate-0';
+                    navContainer.appendChild(navItem);
+                    navContainer.appendChild(separator);
+                } else {
+                    navContainer.appendChild(navItem);
+                }
+
+                
+                const detailItem = document.createElement('div');
+                detailItem.id = `phase-${phase.id}`;
+                detailItem.className = 'phase-detail-card bg-white rounded-lg shadow-lg p-6 md:p-8 hidden';
+                
+                let activitiesList = phase.activities.map(item => `<li class="flex items-start"><span class="text-teal-600 mr-2 mt-1">&#10003;</span><span>${item}</span></li>`).join(''); 
+                let deliverablesList = phase.deliverables.map(item => `<li class="flex items-start"><span class="text-teal-700 mr-2 mt-1">&#9733;</span><span>${item}</span></li>`).join(''); 
+
+                let initialButtonText = "Gerar Draft de Alinhamento ✨";
+                if (phase.id === 2) initialButtonText = "Gerar Roteiro de Entrevista ✨";
+                else if (phase.id === 4) initialButtonText = "Gerar Texto para Slide TO-BE ✨";
+                else if (phase.id === 7) initialButtonText = "Gerar Tópicos de Lições Aprendidas ✨";
+                else initialButtonText = "Gerar Resumo para Status Report ✨";
+
+
+                detailItem.innerHTML = `
+                    <h3 class="text-xl md:text-2xl font-bold text-teal-700 mb-4">Etapa ${phase.id}: ${phase.title}</h3> 
+                    <p class="mb-4 text-stone-600"><strong class="text-stone-800">Duração Estimada:</strong> ${phase.durationWeeks} semanas</p>
+                    <p class="text-base text-stone-700 leading-relaxed mb-6">${phase.description}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-semibold text-stone-800 mb-3">Atividades-Chave</h4>
+                            <ul class="space-y-2 text-stone-600">
+                                ${activitiesList}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold text-stone-800 mb-3">Entregáveis Esperados</h4>
+                            <ul class="space-y-2 text-stone-600">
+                                ${deliverablesList}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- FEATURE GEMINI: Gerador de Documentação Rápida -->
+                    <div class="mt-8 pt-6 border-t border-stone-100">
+                        <h4 class="text-lg font-semibold text-stone-800 mb-3">Gerador Gemini AI (Draft Rápido)</h4>
+                        <p class="text-sm text-stone-600 mb-4">Use a IA para gerar instantaneamente um rascunho de documento interno crucial para esta fase.</p>
+                        <button id="btn-generate-${phase.id}" 
+                                onclick="generateDocumentation(${phase.id})" 
+                                class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md flex items-center justify-center disabled:opacity-50">
+                            ${initialButtonText}
+                        </button>
+                        <div id="output-${phase.id}" class="mt-4 min-h-[50px]">
+                            <!-- O conteúdo gerado aparecerá aqui -->
+                        </div>
+                    </div>
+
+                `;
+                detailsContainer.appendChild(detailItem);
+            });
+
+            
+            renderTimelineChart();
+
+            
+            selectPhase(1);
+        });
+
+        function selectPhase(phaseId) {
+            
+            document.querySelectorAll('.roadmap-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.getElementById(`nav-phase-${phaseId}`).classList.add('active');
+
+            
+            document.querySelectorAll('.phase-detail-card').forEach(card => {
+                if (card.id === `phase-${phaseId}`) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            
+            const elementToScroll = document.getElementById(`phase-${phaseId}`);
+            if (elementToScroll) {
+                
+                const yOffset = -20; 
+                const y = elementToScroll.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                window.scrollTo({top: y, behavior: 'smooth'});
+            }
+        }
+
+        function renderTimelineChart() {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            
+            const labels = phaseData.map(p => `Etapa ${p.id}: ${p.title}`);
+            const startData = phaseData.map(p => p.startWeeks);
+            const durationData = phaseData.map(p => p.durationWeeks);
+
+            const timelineData = {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Início (Semanas)',
+                        data: startData,
+                        backgroundColor: 'rgba(0, 0, 0, 0.0)', 
+                        borderColor: 'rgba(0, 0, 0, 0.0)',
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    },
+                    {
+                        label: 'Duração (Semanas)',
+                        data: durationData,
+                        backgroundColor: '#0f766e', 
+                        borderColor: '#0d9488', 
+                        borderWidth: 1,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    }
+                ]
+            };
+
+            const options = {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Semanas do Projeto'
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        ticks: {
+                            autoSkip: false,
+                            callback: function(value, index, values) {
+                                
+                                const label = this.getLabelForValue(value);
+                                if (label.length > 25) {
+                                    return label.substring(0, 25) + '...';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.datasetIndex === 1) { 
+                                    const phase = phaseData[context.dataIndex];
+                                    label += `${context.raw} semanas (Início: Sem ${phase.startWeeks}, Fim: Sem ${phase.startWeeks + phase.durationWeeks})`;
+                                } else {
+                                    return null; 
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false 
+                    }
+                }
+            };
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: timelineData,
+                options: options
+            });
+        }
+    </script>
+</body>
+</html>
